@@ -33,6 +33,7 @@ router.post("/ai/description", async (req, res) => {
           Authorization: `Bearer ${process.env.SAMBANOVA_API_KEY}`,
           "Content-Type": "application/json",
         },
+          timeout: 15000,
       }
     );
 
@@ -104,7 +105,7 @@ router.post("/", verifyToken, upload.single("image"), async (req, res) => {
   }
 });
 
-// ✅ Get logged-in user's items
+
 router.get("/", verifyToken, async (req, res) => {
   try {
     const items = await Item.find({ user: req.user.id });
@@ -114,7 +115,7 @@ router.get("/", verifyToken, async (req, res) => {
   }
 });
 
-// ✅ Get all items (public)
+
 router.get("/all", async (req, res) => {
   try {
     const items = await Item.find().populate("user", "name");
@@ -124,7 +125,7 @@ router.get("/all", async (req, res) => {
   }
 });
 
-// ✅ Get a single item (public)
+
 router.get("/:id", async (req, res) => {
   try {
     const item = await Item.findById(req.params.id);
@@ -135,7 +136,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// ✅ Delete an item
+
 router.delete("/:id", verifyToken, async (req, res) => {
   try {
     const item = await Item.findById(req.params.id);
@@ -150,7 +151,7 @@ router.delete("/:id", verifyToken, async (req, res) => {
   }
 });
 
-// ✅ Contact Owner
+
 router.get("/contact/:id", verifyToken, async (req, res) => {
   try {
     const item = await Item.findById(req.params.id).populate("user", "name email phone");
@@ -171,7 +172,7 @@ router.put("/:id", verifyToken, async (req, res) => {
   const { name, type, location, description, image } = req.body;
 
   try {
-    // Find post by ID
+    
     const item = await Item.findById(id);
 
     if (!item) return res.status(404).json({ message: "Post not found" });
@@ -181,7 +182,7 @@ router.put("/:id", verifyToken, async (req, res) => {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
-    // Update fields
+    
     item.name = name || item.name;
     item.type = type || item.type;
     item.location = location || item.location;
