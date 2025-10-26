@@ -33,7 +33,7 @@ router.post("/ai/description", async (req, res) => {
           Authorization: `Bearer ${process.env.SAMBANOVA_API_KEY}`,
           "Content-Type": "application/json",
         },
-          timeout: 15000,
+         
       }
     );
 
@@ -47,9 +47,14 @@ router.post("/ai/description", async (req, res) => {
     if (descriptions.length === 0) throw new Error("No valid descriptions generated");
     res.json({ descriptions });
   } catch (err) {
-    console.error("🔥 SambaNova API error details:", err.response?.data || err.message);
-    res.status(500).json({ message: "Failed to generate description" });
-  }
+  console.error("🔥 SambaNova API error details:", {
+    message: err.message,
+    code: err.code,
+    response: err.response?.data,
+    status: err.response?.status,
+  });
+  res.status(500).json({ message: "Failed to generate description" });
+}
 });
 
 
