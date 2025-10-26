@@ -4,15 +4,15 @@ import fs from "fs";
 import { v2 as cloudinary } from "cloudinary";
 import Item from "../models/Item.js";
 import { verifyToken } from "../middleware/authMiddleware.js";
-import cohere from "cohere-ai"; // ✅ lowercase
+import cohere from "cohere-ai"; // lowercase import
 import dotenv from "dotenv";
 import axios from "axios";
 
 const router = express.Router();
 dotenv.config();
 
-// ✅ Initialize Cohere
-cohere.init(process.env.COHERE_API_KEY);
+
+cohere.apiKey = process.env.COHERE_API_KEY;
 
 router.post("/ai/description", async (req, res) => {
   const { name } = req.body;
