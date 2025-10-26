@@ -8,42 +8,46 @@ import dotenv from "dotenv";
 import axios from "axios";
 const router = express.Router();
 dotenv.config();
-
-router.post('/ai/description', async (req, res) => {
+router.post("/ai/description", async (req, res) => {
   const { name } = req.body;
-  if (!name) return res.status(400).json({ message: 'Item name is required' });
+  if (!name) return res.status(400).json({ message: "Item name is required" });
 
   try {
     const response = await axios.post(
-      'https://api.sambanova.ai/v1/chat/completions',
+      "https://api.sambanova.ai/v1/chat/completions",
       {
-        model: 'Llama-4-Maverick-17B-128E-Instruct',
+        model: "Llama-4-Maverick-17B-128E-Instruct",
         messages: [
           {
-            role: 'user',
+            role: "user",
             content: `Generate 5 short, unique descriptions for a FOUND item.
-                      Name: ${name}
-                      
-                      Include appearance and where it might be found.`
-          }
+                      Name: ${name}.
+                      Each description should mention appearance and possible found location.`,
+          },
         ],
         temperature: 0.7,
         top_p: 0.9,
-        n: 5
       },
       {
         headers: {
           Authorization: `Bearer ${process.env.SAMBANOVA_API_KEY}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       }
     );
 
-    const descriptions = response.data.choices.map(c => c.message.content.trim());
+    const content = response.data?.choices?.[0]?.message?.content || "";
+    const descriptions = content
+      .split("\n")
+      .map((l) => l.replace(/^\d+[\.\)]\s*/, "").trim())
+      .filter((l) => l.length > 0)
+      .slice(0, 5);
+
+    if (descriptions.length === 0) throw new Error("No valid descriptions generated");
     res.json({ descriptions });
   } catch (err) {
-    console.error('SambaNova API error:', err.response?.data || err.message);
-    res.status(500).json({ message: 'Failed to generate description' });
+    console.error("🔥 SambaNova API error details:", err.response?.data || err.message);
+    res.status(500).json({ message: "Failed to generate description" });
   }
 });
 

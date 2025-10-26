@@ -168,10 +168,10 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid admin code" });
     }
 
-    const admin = await Admin.findOne({ email });
-    if (!admin) return res.status(400).json({ message: "Invalid credentials" });
+     const admin = await Admin.findOne({ email });
+     if (!admin) return res.status(400).json({ message: "Invalid credentials" });
 
-    const isMatch = await admin.matchPassword(password);
+     const isMatch = await admin.matchPassword(password);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
     const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET, { expiresIn: "30d" });
