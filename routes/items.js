@@ -4,34 +4,29 @@ import fs from "fs";
 import { v2 as cloudinary } from "cloudinary";
 import Item from "../models/Item.js";
 import { verifyToken } from "../middleware/authMiddleware.js";
-import OpenAI from "openai";
+import cohere from "cohere-ai";
 import dotenv from "dotenv";
 import axios from "axios";
 const router = express.Router();
 dotenv.config();
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+cohere.init(process.env.COHERE_API_KEY);
 
 router.post("/ai/description", async (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ message: "Item name is required" });
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "user",
-          content: `Generate 5 short, unique descriptions for a FOUND item named "${name}".
-Include appearance and possible found location.`,
-        },
-      ],
+    const response = await cohere.generate({
+      model: "command-xlarge",   // or "xlarge" depending on your account
+      prompt: `Generate 5 short, unique descriptions for a FOUND item named "${name}". Include appearance and possible found location.`,
+      max_tokens: 150,
       temperature: 0.7,
+      k: 0,
+      stop_sequences: ["--"]
     });
 
-    const text = completion.choices[0].message.content;
+    const text = response.body.generations[0].text;
     const descriptions = text
       .split("\n")
       .map((l) => l.replace(/^\d+[\.\)]\s*/, "").trim())
@@ -40,7 +35,7 @@ Include appearance and possible found location.`,
 
     res.json({ descriptions });
   } catch (err) {
-    console.error("OpenAI error:", err);
+    console.error("Cohere error:", err);
     res.status(500).json({ message: "Failed to generate description" });
   }
 });
