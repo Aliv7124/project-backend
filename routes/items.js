@@ -4,13 +4,15 @@ import fs from "fs";
 import { v2 as cloudinary } from "cloudinary";
 import Item from "../models/Item.js";
 import { verifyToken } from "../middleware/authMiddleware.js";
-import cohere from "cohere-ai";
+import Cohere from "cohere-ai"; // note the capital C
 import dotenv from "dotenv";
 import axios from "axios";
+
 const router = express.Router();
 dotenv.config();
 
-cohere.init(process.env.COHERE_API_KEY);
+// ✅ Create a Cohere client instance
+const cohere = new Cohere({ apiKey: process.env.COHERE_API_KEY });
 
 router.post("/ai/description", async (req, res) => {
   const { name } = req.body;
@@ -18,12 +20,12 @@ router.post("/ai/description", async (req, res) => {
 
   try {
     const response = await cohere.generate({
-      model: "command-xlarge",   // or "xlarge" depending on your account
+      model: "command-xlarge", // or "xlarge" depending on your plan
       prompt: `Generate 5 short, unique descriptions for a FOUND item named "${name}". Include appearance and possible found location.`,
       max_tokens: 150,
       temperature: 0.7,
       k: 0,
-      stop_sequences: ["--"]
+      stop_sequences: ["--"],
     });
 
     const text = response.body.generations[0].text;
