@@ -11,8 +11,6 @@ import axios from "axios";
 const router = express.Router();
 dotenv.config();
 
-
-// ✅ Correct initialization for new SDK
 const cohere = new CohereClient({
   token: process.env.COHERE_API_KEY,
 });
@@ -22,15 +20,14 @@ router.post("/ai/description", async (req, res) => {
   if (!name) return res.status(400).json({ message: "Item name is required" });
 
   try {
-    // ✅ Correct method for text generation
-    const response = await cohere.generate({
+    // ✅ Use new Chat API
+    const response = await cohere.chat({
       model: "command-r-plus",
-      prompt: `Generate 5 short, unique descriptions for a FOUND item named "${name}". Include appearance and possible found location.`,
-      max_tokens: 150,
+      message: `Generate 5 short, unique descriptions for a FOUND item named "${name}". Include appearance and possible found location.`,
       temperature: 0.7,
     });
 
-    const text = response.generations[0].text;
+    const text = response.text;
     const descriptions = text
       .split("\n")
       .map((l) => l.replace(/^\d+[\.\)]\s*/, "").trim())
@@ -40,7 +37,7 @@ router.post("/ai/description", async (req, res) => {
     res.json({ descriptions });
   } catch (err) {
     console.error("Cohere error:", err);
-    res.status(500).json({ message: "Failed to generate description" });
+    res.status(500).json({ message: err.message || "Failed to generate description" });
   }
 });
 
