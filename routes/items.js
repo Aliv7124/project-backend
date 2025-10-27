@@ -4,13 +4,13 @@ import fs from "fs";
 import { v2 as cloudinary } from "cloudinary";
 import Item from "../models/Item.js";
 import { verifyToken } from "../middleware/authMiddleware.js";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import fetch from "node-fetch";
 import dotenv from "dotenv";
 import axios from "axios";
 
 const router = express.Router();
 dotenv.config();
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
 
 router.post("/ai/description", async (req, res) => {
   const { name } = req.body;
@@ -20,22 +20,35 @@ router.post("/ai/description", async (req, res) => {
       return res.status(400).json({ message: "Item name is required" });
     }
 
-    // Initialize Gemini model
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    const response = await fetch("https://api.sambanova.ai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.SAMBANOVA_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "Meta-Llama-3.1-8B-Instruct",
+        messages: [
+          { role: "system", content: "You are a helpful assistant for lost and found item descriptions." },
+          { role: "user", content: `Write a short, clear lost and found description for: ${name}.` }
+        ],
+      }),
+    });
 
+    const data = await response.json();
 
-    // Generate content
-    const prompt = `Write a short, human-like lost and found description for this item: ${name}. 
-    The description should be clear, simple, and helpful for people identifying the item.`;
+    if (!response.ok) {
+      console.error("SambaNova API Error:", data);
+      return res.status(500).json({ message: "Failed to generate description", error: data });
+    }
 
-    const result = await model.generateContent(prompt);
-    const description = result.response.text();
-
+    const description = data.choices?.[0]?.message?.content || "No description generated.";
     res.json({ description });
   } catch (error) {
-    console.error("Gemini API Error:", error);
-    res.status(500).json({ message: "Failed to generate description" });
+    console.error("SambaNova Error:", error);
+    res.status(500).json({ message: "Failed to generate description", error: error.message });
   }
+  
 });
 
 
