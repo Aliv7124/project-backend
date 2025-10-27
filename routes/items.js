@@ -30,7 +30,8 @@ router.post("/ai/description", async (req, res) => {
         model: "Meta-Llama-3.1-8B-Instruct",
         messages: [
           { role: "system", content: "You are a helpful assistant that writes clear, short lost and found descriptions for items." },
-          { role: "user", content: `Write a professional and concise lost and found description for the following item: ${name}.` }
+         { role: "user", content: `Write a short, professional "Found Item" description for: ${name}. The description should start with "Found Item:" and clearly describe the item, where it might have been found, and a note for the owner to contact.` }
+
         ],
         max_tokens: 200,
         temperature: 0.7,
