@@ -21,7 +21,8 @@ router.post("/ai/description", async (req, res) => {
     }
 
     // Initialize Gemini model
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+
 
     // Generate content
     const prompt = `Write a short, human-like lost and found description for this item: ${name}. 
