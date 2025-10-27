@@ -4,42 +4,39 @@ import fs from "fs";
 import { v2 as cloudinary } from "cloudinary";
 import Item from "../models/Item.js";
 import { verifyToken } from "../middleware/authMiddleware.js";
-import { CohereClient } from "cohere-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
 import axios from "axios";
 
 const router = express.Router();
 dotenv.config();
-
-const cohere = new CohereClient({
-  token: process.env.COHERE_API_KEY,
-});
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 router.post("/ai/description", async (req, res) => {
   const { name } = req.body;
-  if (!name) return res.status(400).json({ message: "Item name is required" });
 
   try {
-    // ✅ Use new Chat API
-    const response = await cohere.chat({
-      model: "command-r-plus",
-      message: `Generate 5 short, unique descriptions for a FOUND item named "${name}". Include appearance and possible found location.`,
-      temperature: 0.7,
-    });
+    if (!name) {
+      return res.status(400).json({ message: "Item name is required" });
+    }
 
-    const text = response.text;
-    const descriptions = text
-      .split("\n")
-      .map((l) => l.replace(/^\d+[\.\)]\s*/, "").trim())
-      .filter((l) => l.length > 0)
-      .slice(0, 5);
+    // Initialize Gemini model
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    res.json({ descriptions });
-  } catch (err) {
-    console.error("Cohere error:", err);
-    res.status(500).json({ message: err.message || "Failed to generate description" });
+    // Generate content
+    const prompt = `Write a short, human-like lost and found description for this item: ${name}. 
+    The description should be clear, simple, and helpful for people identifying the item.`;
+
+    const result = await model.generateContent(prompt);
+    const description = result.response.text();
+
+    res.json({ description });
+  } catch (error) {
+    console.error("Gemini API Error:", error);
+    res.status(500).json({ message: "Failed to generate description" });
   }
 });
+
 
 // ✅ Cloudinary config (use env vars for deployment)
 cloudinary.config({
