@@ -11,6 +11,38 @@ import axios from "axios";
 const router = express.Router();
 dotenv.config();
 
+router.post("/ai/chat", async (req, res) => {
+  const { message } = req.body;
+  try {
+    const response = await axios.post(
+      "https://api.sambanova.ai/v1/chat/completions",
+      {
+        model: "Meta-Llama-3.3-70B-Instruct",   // pick a model they support
+         messages: [
+          {
+            role: "system",
+            content:
+              "You are an assistant for a Lost and Found web application. Always give short, helpful responses related to lost or found items, reporting, recovery tips, or platform usage.",
+          },
+          { role: "user", content: message },
+        ],
+        max_tokens: 200,
+        temperature: 0.7,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.SAMBANOVA_API_KEY}`
+        },
+      }
+    );
+    res.json({ reply: response.data.choices[0].message.content });
+  } catch (error) {
+    console.error("SambaNova chatbot error:", error.response?.data || error.message);
+    res.status(500).json({ error: "Chatbot error" });
+  }
+});
+
 
 router.post("/ai/description", async (req, res) => {
   const { name } = req.body;
@@ -66,6 +98,7 @@ router.post("/ai/description", async (req, res) => {
     res.status(500).json({ message: "Failed to generate description", error: error.message });
   }
 });
+
 
 // ✅ Cloudinary config (use env vars for deployment)
 cloudinary.config({
