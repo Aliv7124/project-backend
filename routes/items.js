@@ -45,13 +45,15 @@ router.post("/ai/chat", async (req, res) => {
 
 
 router.post("/ai/description", async (req, res) => {
-  const { name } = req.body;
+  const { name,location } = req.body;
 
   try {
     if (!name) {
       return res.status(400).json({ message: "Item name is required" });
+          if (!location) {
+      return res.status(400).json({ message: "Location is required" });
     }
-
+  }
     const response = await fetch("https://api.sambanova.ai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -60,15 +62,20 @@ router.post("/ai/description", async (req, res) => {
       },
       body: JSON.stringify({
         model: "Meta-Llama-3.1-8B-Instruct",
-        messages: [
-          { role: "system", content: "You are a helpful assistant that writes clear, short lost and found descriptions for items." },
-         { role: "user", content: `Write a short, professional "Found Item" description for: ${name}. The description should start with "Found Item:" and clearly describe the item, where it might have been found, and a note for the owner to contact.` }
-
-        ],
-        max_tokens: 200,
-        temperature: 0.7,
-      }),
-    });
+ messages: [
+      {
+        role: "system",
+        content: "You are a helpful assistant that writes clear, short lost and found descriptions for items.",
+      },
+      {
+        role: "user",
+        content: `Write a short, professional "Found Item" description for: ${name}. The description should start with "Found Item:" and clearly describe the item, where it might have been found ${location}, and a note for the owner to contact.`,
+      },
+    ],
+    max_tokens: 200,
+    temperature: 0.7,
+  }),
+});
 
     // Try to safely parse the response
     const text = await response.text();
