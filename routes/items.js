@@ -43,6 +43,54 @@ router.post("/ai/chat", async (req, res) => {
   }
 });
 
+router.post("/ai/lost-description", async (req, res) => {
+  const { name, location } = req.body;
+
+  try {
+  
+    if (!name) {
+      return res.status(400).json({ message: "Item name is required" });
+    }
+    if (!location) {
+      return res.status(400).json({ message: "Location is required" });
+    }
+
+    
+    const response = await fetch("https://api.sambanova.ai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.SAMBANOVA_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "Meta-Llama-3.1-8B-Instruct",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a helpful assistant that writes clear, short lost and found descriptions for items.",
+          },
+          {
+            role: "user",
+            content: `Write a short, professional "Lost Item" description for: ${name}. The description should start with "Lost Item:" and clearly describe the item, mention that it was last seen at or near ${location}, and include a note requesting anyone who finds it to contact the owner.`,
+          },
+        ],
+        max_tokens: 200,
+        temperature: 0.7,
+      }),
+    });
+
+    const data = await response.json();
+
+  
+    res.json({ description: data.choices[0].message.content });
+  } catch (error) {
+    console.error("Error generating lost item description:", error);
+    res.status(500).json({ message: "Failed to generate lost item description" });
+  }
+});
+
+
 
 router.post("/ai/description", async (req, res) => {
   const { name,location } = req.body;

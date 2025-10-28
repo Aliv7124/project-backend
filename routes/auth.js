@@ -9,9 +9,7 @@ const router = express.Router();
 const FACEBOOK_APP_ID = process.env.FACEBOOK_APP_ID;
 const FACEBOOK_APP_SECRET = process.env.FACEBOOK_APP_SECRET;
 
-// =====================
-// Email/Password Signup
-// =====================
+
 router.post("/signup", async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -28,9 +26,7 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-// =====================
-// Email/Password Login
-// =====================
+
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -47,9 +43,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// =====================
-// Facebook Login
-// =====================
+
 router.post("/facebook-login", async (req, res) => {
   const { accessToken, userID, name, email, picture } = req.body;
 
@@ -58,7 +52,7 @@ router.post("/facebook-login", async (req, res) => {
   }
 
   try {
-    // Verify token with Facebook
+    
     const response = await axios.get(
       `https://graph.facebook.com/debug_token?input_token=${accessToken}&access_token=${FACEBOOK_APP_ID}|${FACEBOOK_APP_SECRET}`
     );
@@ -66,10 +60,10 @@ router.post("/facebook-login", async (req, res) => {
     const data = response.data.data;
 
     if (data.is_valid && data.user_id === userID) {
-      // Check if user exists in DB
+      
       let user = await User.findOne({ facebookId: userID });
       if (!user) {
-        // Create new user
+        
         user = await User.create({
           name,
           email,
@@ -78,7 +72,7 @@ router.post("/facebook-login", async (req, res) => {
         });
       }
 
-      // Create JWT token
+      
       const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
       res.status(200).json({ user, token });
     } else {
@@ -90,9 +84,7 @@ router.post("/facebook-login", async (req, res) => {
   }
 });
 
-// =====================
-// Get current user
-// =====================
+
 router.get("/me", verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
@@ -103,9 +95,7 @@ router.get("/me", verifyToken, async (req, res) => {
   }
 });
 
-// =====================
-// Update profile
-// =====================
+
 router.put("/me", verifyToken, async (req, res) => {
   try {
     const userId = req.user.id;

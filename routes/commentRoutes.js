@@ -4,7 +4,7 @@ import { verifyToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Add a comment to an item
+
 router.post("/item/:itemId", verifyToken, async (req, res) => {
   try {
     const { text } = req.body;
@@ -24,7 +24,7 @@ router.post("/item/:itemId", verifyToken, async (req, res) => {
   }
 });
 
-// Get all comments for an item
+
 router.get("/item/:itemId", async (req, res) => {
   try {
     const comments = await Comment.find({ itemId: req.params.itemId })
@@ -37,7 +37,7 @@ router.get("/item/:itemId", async (req, res) => {
   }
 });
 
-// Delete a comment by ID
+
 router.delete("/:commentId", verifyToken, async (req, res) => {
   try {
     const comment = await Comment.findById(req.params.commentId);
